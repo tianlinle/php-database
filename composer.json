@@ -1,0 +1,21 @@
+{
+    "name": "tian/database",
+    "authors": [
+        {
+            "name": "wangtianlin",
+            "email": "501824056@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Tian\\Orm\\": "src"
+        }
+    },
+    "require": {},
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}
