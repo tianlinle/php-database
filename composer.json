@@ -12,7 +12,6 @@
         }
     },
     "require": {
-        "symfony/dependency-injection": "^3.2"
     },
     "repositories": {
         "packagist": {
