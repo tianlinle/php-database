@@ -4,7 +4,7 @@ namespace Tian\Database;
 /**
 * @author wangtianlin
 */
-class Result
+class Query
 {
     const CONJUNCTION_AND = ' AND ';
     const CONJUNCTION_OR = ' OR ';
@@ -118,26 +118,39 @@ class Result
 
     public function total()
     {
-        $query = 'SELECT COUNT(*) FROM ' . $this->quoteColumn($this->model::getTableName());
+        $sql = 'SELECT COUNT(*) FROM ' . $this->quoteColumn($this->model::getTableName());
         if (!empty($this->condiction)) {
-            $query . ' WHERE ' . implode('', $this->condiction);
+            $sql . ' WHERE ' . implode('', $this->condiction);
         }
-        $statement = $this->connection->exec($query);
+        $statement = $this->connection->exec($sql);
         return $statement->fetchColumn();
-    }
-
-    public function countCurrent()
-    {
-
     }
 
     public function all()
     {
+        $sql = $this->sql();
+        $statement = $this->connection->exec($sql);
+        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $collection = new Collection();
+        $class = $this->model;
+        foreach ($rows as $row) {
+            $model = new $class($row);
+            $collection[] = $model;
+        }
+        return $collection;
     }
 
     public function first()
     {
-
+        $sql = $this->sql();
+        $statement = $this->connection->exec($sql);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        $model = null;
+        if ($row) {
+            $class = $this->model;
+            $model = new $class($row);
+        }
+        return $model;
     }
 
     public function update()
@@ -150,9 +163,19 @@ class Result
         
     }
 
-    public function exec($query)
+    protected function sql()
     {
-
+        $sql = 'SELECT * FROM ' . $this->quoteColumn($this->model::getTableName());
+        if (!empty($this->condiction)) {
+            $sql . ' WHERE ' . implode('', $this->condiction);
+        }
+        if (!empty($this->order)) {
+            $sql .= ' ORDER BY ' . implode(',', $this->order);
+        }
+        if ($this->limit) {
+            $sql .= $this->limit;
+        }
+        return $sql;
     }
 
     protected static function quoteValue($value)

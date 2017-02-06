@@ -16,7 +16,7 @@ class ORM
 
     public function query($model)
     {
-        return new Result($model, $this);
+        return new Query($model, $this);
     }
 
     public function setDebug($callable)

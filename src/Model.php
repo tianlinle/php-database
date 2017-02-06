@@ -8,6 +8,13 @@ class Model
 {
     const TABLE_PREFIX = 'tb_';
 
+    protected $row;
+
+    public function __construct($row = null)
+    {
+        $this->row = $row;
+    }
+
     public static function getTableName()
     {
         return static::TABLE_PREFIX . static::underscore(static::class);
