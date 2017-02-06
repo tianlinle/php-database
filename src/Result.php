@@ -9,6 +9,9 @@ class Result
     const CONJUNCTION_AND = ' AND ';
     const CONJUNCTION_OR = ' OR ';
 
+    const ORDER_DESC = ' DESC';
+    const ORDER_ASC = ' ASC';
+
     protected $connection;
     protected $condiction = [];
     protected $model;
@@ -101,8 +104,43 @@ class Result
         return $this;
     }
 
+    public function order($field, $type = self::ORDER_ASC)
+    {
+
+    }
+
+    public function limit($num, $offset)
+    {
+
+    }
+
+    public function countAll()
+    {
+
+    }
+
+    public function countCurrent()
+    {
+
+    }
+
     public function all()
     {
+    }
+
+    public function first()
+    {
+
+    }
+
+    public function update()
+    {
+
+    }
+
+    public function delete()
+    {
+        
     }
 
     protected static function quoteValue($value)
