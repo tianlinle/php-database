@@ -14,6 +14,8 @@ class Result
 
     protected $connection;
     protected $condiction = [];
+    protected $order = [];
+    protected $limit = '';
     protected $model;
 
     public function __construct($model, ORM $connection)
@@ -106,17 +108,22 @@ class Result
 
     public function order($field, $type = self::ORDER_ASC)
     {
-
+        $this->order[] = self::quoteColumn($field) . $type;
     }
 
-    public function limit($num, $offset)
+    public function limit($num, $offset = 0)
     {
-
+        $this->limit = ' limit ' . intval($offset) . ',' . intval($num + $offset);
     }
 
-    public function countAll()
+    public function total()
     {
-
+        $query = 'SELECT COUNT(*) FROM ' . $this->quoteColumn($this->model::getTableName());
+        if (!empty($this->condiction)) {
+            $query . ' WHERE ' . implode('', $this->condiction);
+        }
+        $statement = $this->connection->exec($query);
+        return $statement->fetchColumn();
     }
 
     public function countCurrent()
@@ -141,6 +148,11 @@ class Result
     public function delete()
     {
         
+    }
+
+    public function exec($query)
+    {
+
     }
 
     protected static function quoteValue($value)

@@ -23,4 +23,11 @@ class ORM
     {
         $this->debug = $callable;
     }
+
+    public function exec($query, $params = [])
+    {
+        $statement = $connection->prepare($query);
+        $statement->execute($params);
+        return $statement;
+    }
 }

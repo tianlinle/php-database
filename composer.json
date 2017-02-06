@@ -11,7 +11,9 @@
             "Tian\\Orm\\": "src"
         }
     },
-    "require": {},
+    "require": {
+        "symfony/dependency-injection": "^3.2"
+    },
     "repositories": {
         "packagist": {
             "type": "composer",
