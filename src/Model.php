@@ -7,8 +7,12 @@ namespace Tian\Database;
 class Model
 {
     const TABLE_PREFIX = 'tb_';
+    const COMMENT = '';
 
     protected $row;
+
+    protected static $columns = [];
+    protected static $uniqueColumns = [];
 
     public function __construct($row = null)
     {

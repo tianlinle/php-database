@@ -26,7 +26,7 @@ class Query
 
     public function where($column, $op, $value, $conjunction = self::CONJUNCTION_AND)
     {
-        $condiction = $this->quoteColumn($column) . ' ' . $op . ' ' . $this->quoteValue($value);
+        $condiction = self::quoteColumn($column) . ' ' . $op . ' ' . self::quoteValue($value);
         if (!empty($this->condiction)) {
             $condiction = $conjunction . $condiction;
         }
@@ -118,17 +118,15 @@ class Query
 
     public function total()
     {
-        $sql = 'SELECT COUNT(*) FROM ' . $this->quoteColumn($this->model::getTableName());
-        if (!empty($this->condiction)) {
-            $sql . ' WHERE ' . implode('', $this->condiction);
-        }
+        $sql = 'SELECT COUNT(*) FROM ' . self::quoteColumn($this->model::getTableName());
+        $sql = $this->appendWherePart($sql);
         $statement = $this->connection->exec($sql);
         return $statement->fetchColumn();
     }
 
     public function all()
     {
-        $sql = $this->sql();
+        $sql = $this->selectSql();
         $statement = $this->connection->exec($sql);
         $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
         $collection = new Collection();
@@ -142,7 +140,7 @@ class Query
 
     public function first()
     {
-        $sql = $this->sql();
+        $sql = $this->selectSql();
         $statement = $this->connection->exec($sql);
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
         $model = null;
@@ -153,27 +151,97 @@ class Query
         return $model;
     }
 
-    public function update()
+    public function insert($map)
     {
+        $sql = 'INSERT INTO ' . self::quoteColumn($this->model::getTableName()) . ' ';
+        $columns = [];
+        $values = [];
+        foreach ($map as $k => $v) {
+            $columns[] = self::quoteColumn($k);
+            $values[] = self::quoteValue($v);
+        }
+        $sql .= '(' . implode(' , ', $columns) . ') VALUES (' . implode(' , ', $values) . ')';
+        $statement = $this->connection->exec($sql);
+        return $statement->rowCount();
+    }
 
+    public function update($values)
+    {
+        $sql = 'UPDATE ' . self::quoteColumn($this->model::getTableName()) . ' SET ';
+        $arr = [];
+        foreach ($values as $column => $value) {
+            $arr[] = self::quoteColumn($column) . ' = ' . self::quoteValue($value);
+        }
+        $sql .= implode(' , ', $arr);
+        $sql = $this->appendWherePart($sql);
+        $statement = $this->connection->exec($sql);
+        return $statement->rowCount();
     }
 
     public function delete()
     {
-        
+        $sql = 'DELETE FROM ' . self::quoteColumn($this->model::getTableName());
+        $sql = $this->appendWherePart($sql);
+        $statement = $this->connection->exec($sql);
+        return $statement->rowCount();
     }
 
-    protected function sql()
+    public function getCreateTableSql()
     {
-        $sql = 'SELECT * FROM ' . $this->quoteColumn($this->model::getTableName());
-        if (!empty($this->condiction)) {
-            $sql . ' WHERE ' . implode('', $this->condiction);
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . self::quoteColumn($this->model::getTableName());
+        $columns = [];
+        $columns[] = '`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT';
+        foreach ($this->model::$columns as $col) {
+            $type = $col->type;
+            if ($col->length) {
+                $type .= '(' . $col->length . ')';
+            }
+            $column = self::quoteColumn($col->name) . ' ' . $type;
+            if (!$col->nullable) {
+                $column .= ' NOT NULL';
+            }
+            if ($col->default !== null) {
+                $column .= ' DEFAULT ' . self::quoteValue($col->default);
+            }
+            if ($col->comment != '') {
+                $column .= ' COMMENT ' . self::quoteValue($col->comment);
+            }
+            $columns[] = $column;
         }
+        foreach ($this->model::$uniqueColumns as $v) {
+            if (is_string($v)) {
+                $v = [$v];
+            }
+            $cs = [];
+            foreach ($v as $o) {
+                $cs[] = self::quoteColumn($o);
+            }
+            $columns[] = 'UNIQUE (' . implode(',', $cs) . ')';
+        }
+        $sql .= '(' . implode(',', $columns) . ')' . 'ENGINE=InnoDB CHARACTER SET utf8mb4';
+        if ($this->model::$comment) {
+            $sql .= ' COMMENT ' . self::quoteValue($this->model::$comment);
+        }
+        return $sql;
+    }
+
+    protected function selectSql()
+    {
+        $sql = 'SELECT * FROM ' . self::quoteColumn($this->model::getTableName());
+        $sql = $this->appendWherePart($sql);
         if (!empty($this->order)) {
             $sql .= ' ORDER BY ' . implode(',', $this->order);
         }
         if ($this->limit) {
             $sql .= $this->limit;
+        }
+        return $sql;
+    }
+
+    protected function appendWherePart($sql)
+    {
+        if (!empty($this->condiction)) {
+            $sql .= ' WHERE ' . implode('', $this->condiction);
         }
         return $sql;
     }

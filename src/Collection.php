@@ -6,5 +6,4 @@ namespace Tian\Database;
 */
 class Collection implements ArrayAccess
 {
-
 }
