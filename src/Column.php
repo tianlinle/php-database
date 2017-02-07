@@ -53,15 +53,18 @@ class Column
     public function notNull()
     {
         $this->nullable = false;
+        return this;
     }
 
     public function default($value)
     {
         $this->default = $value;
+        return this;
     }
 
     public function comment($string)
     {
         $this->comment = $string;
+        return this;
     }
 }
