@@ -8,6 +8,7 @@ class Model
 {
     const TABLE_PREFIX = 'tb_';
     const COMMENT = '';
+    const CLASS_NAME_EXT = 'Model';
 
     protected $row;
 
@@ -21,7 +22,7 @@ class Model
 
     public static function getTableName()
     {
-        return static::TABLE_PREFIX . static::underscore(static::class);
+        return static::TABLE_PREFIX . static::underscore(substr(static::class, 0, -strlen(static::CLASS_NAME_EXT)));
     }
 
     public static function camelize($string)
