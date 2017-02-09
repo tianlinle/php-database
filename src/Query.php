@@ -191,7 +191,7 @@ class Query
         $sql = 'CREATE TABLE IF NOT EXISTS ' . self::quoteColumn($this->model::getTableName());
         $columns = [];
         $columns[] = '`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT';
-        foreach ($this->model::$columns as $col) {
+        foreach ($this->model::getColumns() as $col) {
             $type = $col->type;
             if ($col->length) {
                 $type .= '(' . $col->length . ')';
@@ -208,6 +208,8 @@ class Query
             }
             $columns[] = $column;
         }
+        $columns[] = '`created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP';
+        $columns[] = '`updated_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP';
         foreach ($this->model::$uniqueColumns as $v) {
             if (is_string($v)) {
                 $v = [$v];
