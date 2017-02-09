@@ -8,7 +8,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Tian\\Orm\\": "src"
+            "Tian\\Database\\": "src"
         }
     },
     "require": {

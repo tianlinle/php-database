@@ -13,11 +13,40 @@ class Model
     protected $row;
 
     protected static $columns = [];
-    protected static $uniqueColumns = [];
+    protected static $uk = [];
+    protected static $pk = [];
+
+    protected static function columns()
+    {
+        return [];
+    }
 
     public function __construct($row = null)
     {
-        $this->row = $row;
+        if ($row) {
+            $this->row = $row;
+        } else {
+            $this->row = [];
+            $columns = static::getColumns();
+            foreach ($columns as $column) {
+                $value = null;
+                if ($column->default !== null && !($column->default instanceof Literal)) {
+                    $value = $column->default;
+                }
+                $this->row[$column->name] = $value;
+            }
+        }
+    }
+
+    public static function getColumns()
+    {
+        if (empty(static::$columns)) {
+            static::$columns = static::columns();
+            array_unshift(static::$columns, Column::int('id')->default(new Literal('PRIMARY KEY AUTO_INCREMENT')));
+            array_push(static::$columns, Column::timestamp('created_time')->default(new Literal('DEFAULT CURRENT_TIMESTAMP')));
+            array_push(static::$columns, Column::timestamp('updated_time')->default(new Literal('DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')));
+        }
+        return static::$columns;
     }
 
     public static function getTableName()

@@ -118,7 +118,8 @@ class Query
 
     public function total()
     {
-        $sql = 'SELECT COUNT(*) FROM ' . self::quoteColumn($this->model::getTableName());
+        $model = $this->model;
+        $sql = 'SELECT COUNT(*) FROM ' . self::quoteColumn($model::getTableName());
         $sql = $this->appendWherePart($sql);
         $statement = $this->connection->exec($sql);
         return $statement->fetchColumn();
@@ -153,7 +154,8 @@ class Query
 
     public function insert($map)
     {
-        $sql = 'INSERT INTO ' . self::quoteColumn($this->model::getTableName()) . ' ';
+        $model = $this->model;
+        $sql = 'INSERT INTO ' . self::quoteColumn($model::getTableName()) . ' ';
         $columns = [];
         $values = [];
         foreach ($map as $k => $v) {
@@ -167,7 +169,8 @@ class Query
 
     public function update($values)
     {
-        $sql = 'UPDATE ' . self::quoteColumn($this->model::getTableName()) . ' SET ';
+        $model = $this->model;
+        $sql = 'UPDATE ' . self::quoteColumn($model::getTableName()) . ' SET ';
         $arr = [];
         foreach ($values as $column => $value) {
             $arr[] = self::quoteColumn($column) . ' = ' . self::quoteValue($value);
@@ -180,7 +183,8 @@ class Query
 
     public function delete()
     {
-        $sql = 'DELETE FROM ' . self::quoteColumn($this->model::getTableName());
+        $model = $this->model;
+        $sql = 'DELETE FROM ' . self::quoteColumn($model::getTableName());
         $sql = $this->appendWherePart($sql);
         $statement = $this->connection->exec($sql);
         return $statement->rowCount();
@@ -188,10 +192,11 @@ class Query
 
     public function getCreateTableSql()
     {
-        $sql = 'CREATE TABLE IF NOT EXISTS ' . self::quoteColumn($this->model::getTableName());
+        $model = $this->model;
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . self::quoteColumn($model::getTableName());
         $columns = [];
         $columns[] = '`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT';
-        foreach ($this->model::getColumns() as $col) {
+        foreach ($model::getColumns() as $col) {
             $type = $col->type;
             if ($col->length) {
                 $type .= '(' . $col->length . ')';
@@ -201,7 +206,11 @@ class Query
                 $column .= ' NOT NULL';
             }
             if ($col->default !== null) {
-                $column .= ' DEFAULT ' . self::quoteValue($col->default);
+                if ($col->default instanceof Literal) {
+                    $column .= ' ' . $col->default->value;
+                } else {
+                    $column .= ' DEFAULT ' . self::quoteValue($col->default);
+                }
             }
             if ($col->comment != '') {
                 $column .= ' COMMENT ' . self::quoteValue($col->comment);
@@ -210,7 +219,7 @@ class Query
         }
         $columns[] = '`created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP';
         $columns[] = '`updated_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP';
-        foreach ($this->model::$uniqueColumns as $v) {
+        foreach ($model::$uniqueColumns as $v) {
             if (is_string($v)) {
                 $v = [$v];
             }
@@ -221,15 +230,16 @@ class Query
             $columns[] = 'UNIQUE (' . implode(',', $cs) . ')';
         }
         $sql .= '(' . implode(',', $columns) . ')' . 'ENGINE=InnoDB CHARACTER SET utf8mb4';
-        if ($this->model::$comment) {
-            $sql .= ' COMMENT ' . self::quoteValue($this->model::$comment);
+        if ($model::$comment) {
+            $sql .= ' COMMENT ' . self::quoteValue($model::$comment);
         }
         return $sql;
     }
 
     protected function selectSql()
     {
-        $sql = 'SELECT * FROM ' . self::quoteColumn($this->model::getTableName());
+        $model = $this->model;
+        $sql = 'SELECT * FROM ' . self::quoteColumn($model::getTableName());
         $sql = $this->appendWherePart($sql);
         if (!empty($this->order)) {
             $sql .= ' ORDER BY ' . implode(',', $this->order);
@@ -250,6 +260,9 @@ class Query
 
     protected static function quoteValue($value)
     {
+        if ($value instanceof Literal) {
+            return $value->value;
+        }
         return \PDO::quote($value);
     }
 

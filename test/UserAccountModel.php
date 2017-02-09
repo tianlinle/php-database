@@ -9,9 +9,10 @@ use Tian\Database\Column;
 */
 class UserAccountModel extends Model
 {
-    protected static $columns = [
-        Column::char('name'),
-        Column::char('password'),
-        '1',
-    ];
+    protected static function columns()
+    {
+        return [
+            Column::char('account'),
+        ];
+    }
 }
